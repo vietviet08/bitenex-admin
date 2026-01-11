@@ -11,12 +11,26 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^1.12.1",
+    "@nuxt/icon": "^2.2.0",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.3.0",
+    "@pinia/nuxt": "^0.11.3",
+    "@tanstack/vue-query": "^5.92.5",
+    "@vee-validate/zod": "^4.15.1",
+    "@vueuse/nuxt": "^14.1.0",
+    "dayjs": "^1.11.19",
     "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "nuxt": "^4.2.2",
+    "prettier": "^3.7.4",
     "typescript": "^5.9.3",
+    "vee-validate": "^4.15.1",
     "vue": "^3.5.26",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.6"
   }
 }
