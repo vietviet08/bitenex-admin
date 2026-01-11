@@ -1,5 +1,38 @@
-import type { LoginCredentials, AuthTokens, User } from '~/types/auth'
-import { Role } from '~/types/auth'
+import type {
+  LoginCredentials,
+  AuthTokens,
+  User,
+  ApiLoginResponse,
+  ApiTokenResponse,
+  ApiUserResponse,
+} from '~/types/auth'
+import { Role, AccessDeniedError } from '~/types/auth'
+
+/**
+ * Transform API token response (snake_case) to frontend format (camelCase)
+ */
+function transformTokens(apiTokens: ApiTokenResponse): AuthTokens {
+  return {
+    accessToken: apiTokens.access_token,
+    refreshToken: apiTokens.refresh_token,
+    tokenType: apiTokens.token_type,
+    expiresIn: apiTokens.expires_in,
+  }
+}
+
+/**
+ * Transform API user response (snake_case) to frontend format (camelCase)
+ */
+function transformUser(apiUser: ApiUserResponse): User {
+  return {
+    id: apiUser.id,
+    email: apiUser.email,
+    fullName: apiUser.full_name,
+    role: apiUser.role,
+    isVerified: apiUser.is_verified,
+    createdAt: apiUser.created_at,
+  }
+}
 
 /**
  * Auth composable for login, logout, and token management
@@ -11,83 +44,63 @@ export function useAuth() {
 
   /**
    * Login with email and password
+   * Validates that user has ADMIN role before allowing access
    */
   async function login(credentials: LoginCredentials): Promise<void> {
     try {
-      // In production, call the actual API
-      // const response = await api.post<{ tokens: AuthTokens; user: User }>('/auth/login', credentials)
-      // authStore.login(response.tokens, response.user)
+      // Call the API to authenticate
+      const response = await api.post<ApiLoginResponse>(
+        '/auth/login',
+        credentials as unknown as Record<string, unknown>
+      )
 
-      // Mock login for development
-      await mockLogin(credentials)
+      // Transform API response to frontend types
+      const tokens = transformTokens(response.tokens)
+      const user = transformUser(response.user)
+
+      // Validate that user has ADMIN role
+      if (user.role !== Role.ADMIN) {
+        throw new AccessDeniedError()
+      }
+
+      // Store auth data
+      authStore.login(tokens, user)
 
       api.showSuccessToast('Welcome back!', 'Login Successful')
       router.push('/admin')
     } catch (error) {
-      api.showErrorToast(error as ReturnType<typeof api.parseError>)
-      throw error
-    }
-  }
-
-  /**
-   * Mock login for development
-   */
-  async function mockLogin(credentials: LoginCredentials): Promise<void> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    // Mock credentials check
-    if (credentials.email === 'admin@example.com' && credentials.password === 'password') {
-      const mockTokens: AuthTokens = {
-        accessToken: 'mock_access_token_' + Date.now(),
-        refreshToken: 'mock_refresh_token_' + Date.now(),
-        tokenType: 'Bearer',
-        expiresIn: 3600,
+      // Handle AccessDeniedError specifically
+      if (error instanceof AccessDeniedError) {
+        api.showErrorToast({
+          code: error.code,
+          message: error.message,
+          status: 403,
+        })
+        throw error
       }
 
-      const mockUser: User = {
-        id: '1',
-        email: credentials.email,
-        fullName: 'Admin User',
-        role: Role.ADMIN,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      authStore.login(mockTokens, mockUser)
-    } else if (credentials.email === 'staff@example.com' && credentials.password === 'password') {
-      const mockTokens: AuthTokens = {
-        accessToken: 'mock_access_token_' + Date.now(),
-        refreshToken: 'mock_refresh_token_' + Date.now(),
-        tokenType: 'Bearer',
-        expiresIn: 3600,
-      }
-
-      const mockUser: User = {
-        id: '2',
-        email: credentials.email,
-        fullName: 'Staff User',
-        role: Role.STAFF,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      authStore.login(mockTokens, mockUser)
-    } else {
-      const error = new Error('Invalid email or password')
-      Object.assign(error, {
-        code: 'AUTHENTICATION_ERROR',
-        message: 'Invalid email or password',
-        status: 401,
-      })
-      throw error
+      // Handle other API errors
+      const apiError = api.parseError(error)
+      api.showErrorToast(apiError)
+      throw apiError
     }
   }
 
   /**
    * Logout and redirect to login
    */
-  function logout(): void {
+  async function logout(): Promise<void> {
+    // Optionally call logout API to revoke refresh token
+    if (authStore.refreshToken) {
+      try {
+        await api.post('/auth/logout', {
+          refresh_token: authStore.refreshToken,
+        })
+      } catch {
+        // Ignore errors - we'll clear local auth anyway
+      }
+    }
+
     authStore.logout()
     router.push('/admin/login')
     api.showSuccessToast('You have been logged out', 'Logged Out')
@@ -101,22 +114,29 @@ export function useAuth() {
       return false
     }
 
-    // In production, call the actual API
-    // const response = await api.post<{ tokens: AuthTokens }>('/auth/refresh', {
-    //   refreshToken: authStore.refreshToken,
-    // })
-    // authStore.setTokens(response.tokens)
-    // try {
-    //   return true
-    // } catch {
-    //   authStore.clearAuth()
-    //   return false
-    // }
-    return true
+    try {
+      const response = await api.post<ApiTokenResponse>('/auth/refresh', {
+        refresh_token: authStore.refreshToken,
+      })
+
+      const tokens = transformTokens(response)
+      authStore.setTokens(tokens)
+      return true
+    } catch {
+      // Refresh failed - clear auth and redirect to login
+      authStore.clearAuth()
+      router.push('/admin/login')
+      api.showErrorToast({
+        code: 'SESSION_EXPIRED',
+        message: 'Session expired. Please log in again.',
+        status: 401,
+      })
+      return false
+    }
   }
 
   /**
-   * Get current user info
+   * Get current user info from API
    */
   async function fetchCurrentUser(): Promise<User | null> {
     if (!authStore.accessToken) {
@@ -124,11 +144,10 @@ export function useAuth() {
     }
 
     try {
-      // In production, call the actual API
-      // const response = await api.get<User>('/auth/me')
-      // authStore.setUser(response)
-      // return response
-      return authStore.user
+      const response = await api.get<ApiUserResponse>('/auth/me')
+      const user = transformUser(response)
+      authStore.setUser(user)
+      return user
     } catch {
       return null
     }

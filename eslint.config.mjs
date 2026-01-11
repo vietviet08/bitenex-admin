@@ -9,7 +9,12 @@ export default withNuxt([
       prettier,
     },
     rules: {
-      'prettier/prettier': 'warn',
+      'prettier/prettier': [
+        'warn',
+        {
+          endOfLine: 'lf',
+        },
+      ],
       'vue/multi-word-component-names': 'off',
     },
   },

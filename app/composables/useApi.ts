@@ -1,6 +1,7 @@
 import type { ApiError, ApiErrorResponse } from '~/types/api'
 
-type RequestBody = Record<string, unknown> | FormData | Blob | ArrayBuffer | string | null
+// RequestBody accepts any serializable object, not just Record<string, unknown>
+type RequestBody = { [key: string]: unknown } | FormData | Blob | ArrayBuffer | string | null
 
 /**
  * Parse API error response into a structured ApiError
