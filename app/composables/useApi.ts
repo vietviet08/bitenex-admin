@@ -1,7 +1,11 @@
 import type { ApiError, ApiErrorResponse } from '~/types/api'
+import type { ApiTokenResponse } from '~/types/auth'
 
 // RequestBody accepts any serializable object, not just Record<string, unknown>
 type RequestBody = { [key: string]: unknown } | FormData | Blob | ArrayBuffer | string | null
+
+let isRefreshing = false
+let refreshPromise: Promise<boolean> | null = null
 
 /**
  * Parse API error response into a structured ApiError
@@ -69,12 +73,49 @@ export function useApi() {
     })
   }
 
-  /**
-   * Core fetch wrapper with auth headers
-   */
+  async function refreshAccessToken(): Promise<boolean> {
+    if (!authStore.refreshToken) {
+      return false
+    }
+
+    if (isRefreshing && refreshPromise) {
+      return refreshPromise
+    }
+
+    isRefreshing = true
+    refreshPromise = (async () => {
+      try {
+        const response = await $fetch<ApiTokenResponse>('/auth/refresh', {
+          baseURL,
+          method: 'POST',
+          body: { refresh_token: authStore.refreshToken },
+          headers: { 'Content-Type': 'application/json' },
+        })
+
+        authStore.setTokens({
+          accessToken: response.access_token,
+          refreshToken: response.refresh_token,
+          tokenType: response.token_type,
+          expiresIn: response.expires_in,
+        })
+
+        return true
+      } catch {
+        authStore.clearAuth()
+        return false
+      } finally {
+        isRefreshing = false
+        refreshPromise = null
+      }
+    })()
+
+    return refreshPromise
+  }
+
   async function apiFetch<T>(
     endpoint: string,
-    options: Parameters<typeof $fetch>[1] = {}
+    options: Parameters<typeof $fetch>[1] = {},
+    isRetry = false
   ): Promise<T> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -96,10 +137,21 @@ export function useApi() {
     } catch (error) {
       const apiError = parseError(error)
 
-      // Handle 401 - clear auth and redirect
-      if (apiError.status === 401) {
-        authStore.clearAuth()
+      if (apiError.status === 401 && !isRetry && authStore.refreshToken) {
+        if (!endpoint.includes('/auth/refresh')) {
+          const refreshed = await refreshAccessToken()
+
+          if (refreshed) {
+            return apiFetch<T>(endpoint, options, true)
+          }
+        }
+
         navigateTo('/admin/login')
+        showErrorToast({
+          code: 'SESSION_EXPIRED',
+          message: 'Session expired. Please log in again.',
+          status: 401,
+        })
       }
 
       throw apiError
@@ -165,5 +217,6 @@ export function useApi() {
     parseError,
     showErrorToast,
     showSuccessToast,
+    refreshAccessToken,
   }
 }

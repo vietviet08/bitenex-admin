@@ -1,7 +1,8 @@
-/**
- * Auth middleware to protect admin routes
- */
 export default defineNuxtRouteMiddleware((to) => {
+  if (import.meta.server) {
+    return
+  }
+
   const authStore = useAuthStore()
 
   // Skip auth check for login page
