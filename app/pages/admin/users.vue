@@ -50,7 +50,10 @@
         </template>
 
         <template #role-cell="{ row }">
-          <UBadge :color="row.original.role === 'admin' ? 'primary' : 'neutral'" variant="subtle">
+          <UBadge
+            :color="row.original.role === Role.ADMIN ? 'primary' : 'neutral'"
+            variant="subtle"
+          >
             {{ row.original.role }}
           </UBadge>
         </template>
@@ -130,8 +133,8 @@
   // Filter options
   const roleOptions = [
     { label: 'All Roles', value: undefined },
-    { label: 'Admin', value: 'admin' },
-    { label: 'Staff', value: 'staff' },
+    { label: 'Admin', value: 'ADMIN' },
+    { label: 'User', value: 'USER' },
   ]
 
   const statusOptions = [
@@ -181,7 +184,7 @@
       id: '2',
       fullName: 'Jane Staff',
       email: 'staff@example.com',
-      role: Role.STAFF,
+      role: Role.USER,
       status: UserStatus.ACTIVE,
       createdAt: '2025-01-02T10:00:00Z',
       updatedAt: '2025-01-02T10:00:00Z',
@@ -199,7 +202,7 @@
       id: '4',
       fullName: 'Alice Support',
       email: 'alice@example.com',
-      role: Role.STAFF,
+      role: Role.USER,
       status: UserStatus.ACTIVE,
       createdAt: '2025-01-04T10:00:00Z',
       updatedAt: '2025-01-04T10:00:00Z',
@@ -208,7 +211,7 @@
       id: '5',
       fullName: 'Charlie Dev',
       email: 'charlie@example.com',
-      role: Role.STAFF,
+      role: Role.USER,
       status: UserStatus.SUSPENDED,
       createdAt: '2025-01-05T10:00:00Z',
       updatedAt: '2025-01-05T10:00:00Z',
@@ -226,7 +229,7 @@
       id: '7',
       fullName: 'Eve Sales',
       email: 'eve@example.com',
-      role: Role.STAFF,
+      role: Role.USER,
       status: UserStatus.ACTIVE,
       createdAt: '2025-01-07T10:00:00Z',
       updatedAt: '2025-01-07T10:00:00Z',
@@ -235,7 +238,7 @@
       id: '8',
       fullName: 'Frank HR',
       email: 'frank@example.com',
-      role: Role.STAFF,
+      role: Role.USER,
       status: UserStatus.INACTIVE,
       createdAt: '2025-01-08T10:00:00Z',
       updatedAt: '2025-01-08T10:00:00Z',

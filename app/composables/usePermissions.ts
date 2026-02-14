@@ -5,7 +5,9 @@ import { Role } from '~/types/auth'
  */
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
   [Role.ADMIN]: ['dashboard', 'users', 'settings', 'orders', 'merchants', 'reports'],
-  [Role.STAFF]: ['dashboard', 'orders'],
+  [Role.USER]: [],
+  [Role.DRIVER]: [],
+  [Role.MERCHANT]: [],
 }
 
 /**
@@ -41,18 +43,11 @@ export function usePermissions() {
   }
 
   /**
-   * Check if current user is staff
-   */
-  function isStaff(): boolean {
-    return hasRole([Role.STAFF])
-  }
-
-  /**
    * Check if current user can access a specific feature
    */
   function canAccess(feature: string): boolean {
     if (!authStore.user) return false
-    const role = authStore.user.role as Role
+    const role = authStore.user.role
     const permissions = ROLE_PERMISSIONS[role] || []
     return permissions.includes(feature)
   }
@@ -88,6 +83,12 @@ export function usePermissions() {
       requiredRoles: [Role.ADMIN],
     },
     {
+      label: 'Merchant Management',
+      icon: 'i-heroicons-building-storefront',
+      to: '/admin/merchants',
+      requiredRoles: [Role.ADMIN],
+    },
+    {
       label: 'Settings',
       icon: 'i-heroicons-cog-6-tooth',
       to: '/admin/settings',
@@ -103,7 +104,6 @@ export function usePermissions() {
   return {
     hasRole,
     isAdmin,
-    isStaff,
     canAccess,
     getVisibleMenuItems,
     adminMenuItems,
