@@ -67,7 +67,9 @@ export function useAuth() {
       authStore.login(tokens, user)
 
       api.showSuccessToast('Welcome back!', 'Login Successful')
-      router.push('/admin')
+      const route = useRoute()
+      const next = (route.query.next as string) || '/admin'
+      router.push(next)
     } catch (error) {
       // Handle AccessDeniedError specifically
       if (error instanceof AccessDeniedError) {
@@ -101,8 +103,11 @@ export function useAuth() {
       }
     }
 
+    // Preserve current path so user can be redirected back after re-login
+    const currentPath = router.currentRoute.value.fullPath
     authStore.logout()
-    router.push('/admin/login')
+    const redirectQuery = currentPath && currentPath !== '/admin/login' ? { next: currentPath } : {}
+    router.push({ path: '/admin/login', query: redirectQuery })
     api.showSuccessToast('You have been logged out', 'Logged Out')
   }
 
@@ -123,9 +128,12 @@ export function useAuth() {
       authStore.setTokens(tokens)
       return true
     } catch {
-      // Refresh failed - clear auth and redirect to login
+      const currentPath = router.currentRoute.value.fullPath
       authStore.clearAuth()
-      router.push('/admin/login')
+      router.push({
+        path: '/admin/login',
+        query: currentPath && currentPath !== '/admin/login' ? { next: currentPath } : {},
+      })
       api.showErrorToast({
         code: 'SESSION_EXPIRED',
         message: 'Session expired. Please log in again.',

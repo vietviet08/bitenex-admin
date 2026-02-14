@@ -1,12 +1,10 @@
-import { defineStore } from 'pinia'
+import { defineStore, skipHydrate } from 'pinia'
 import { useLocalStorage, StorageSerializers } from '@vueuse/core'
 import type { User, AuthTokens, Role } from '~/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  // State with localStorage persistence
   const accessToken = useLocalStorage<string | null>('admin_access_token', null)
   const refreshToken = useLocalStorage<string | null>('admin_refresh_token', null)
-  // Use object serializer for proper JSON serialization
   const user = useLocalStorage<User | null>('admin_user', null, {
     serializer: StorageSerializers.object,
   })
@@ -48,10 +46,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    // State
-    accessToken,
-    refreshToken,
-    user,
+    accessToken: skipHydrate(accessToken),
+    refreshToken: skipHydrate(refreshToken),
+    user: skipHydrate(user),
     // Getters
     isAuthenticated,
     userRole,
