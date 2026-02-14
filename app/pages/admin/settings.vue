@@ -215,7 +215,8 @@
 
   // Convert currency between string and object for USelectMenu
   const currency = computed({
-    get: () => currencyOptions.find((opt) => opt.value === currencyValue.value) || currencyOptions[0],
+    get: () =>
+      currencyOptions.find((opt) => opt.value === currencyValue.value) || currencyOptions[0],
     set: (value: { label: string; value: string }) => {
       currencyValue.value = value.value
     },
