@@ -146,7 +146,11 @@ export function useApi() {
           }
         }
 
-        navigateTo('/admin/login')
+        const currentPath = globalThis.window
+          ? globalThis.window.location.pathname + globalThis.window.location.search
+          : '/admin'
+        authStore.clearAuth()
+        navigateTo({ path: '/admin/login', query: { next: currentPath } })
         showErrorToast({
           code: 'SESSION_EXPIRED',
           message: 'Session expired. Please log in again.',

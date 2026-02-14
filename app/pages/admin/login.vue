@@ -3,8 +3,8 @@
     <UCard class="w-full max-w-md">
       <template #header>
         <div class="text-center">
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Admin Login</h1>
-          <p class="mt-2 text-gray-600 dark:text-gray-400">Sign in to manage Bitenex</p>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Bitenex</h1>
+          <p class="mt-2 text-gray-600 dark:text-gray-400">Sign in your account</p>
         </div>
       </template>
 

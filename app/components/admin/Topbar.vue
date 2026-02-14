@@ -47,19 +47,19 @@
       {
         label: 'Profile',
         icon: 'i-heroicons-user',
-        click: () => navigateTo('/admin/profile'),
+        onSelect: () => navigateTo('/admin/profile'),
       },
       {
         label: 'Settings',
         icon: 'i-heroicons-cog-6-tooth',
-        click: () => navigateTo('/admin/settings'),
+        onSelect: () => navigateTo('/admin/settings'),
       },
     ],
     [
       {
         label: 'Logout',
         icon: 'i-heroicons-arrow-right-on-rectangle',
-        click: () => logout(),
+        onSelect: () => logout(),
       },
     ],
   ]

@@ -131,12 +131,12 @@
   const debouncedSearch = ref('')
   const currentPage = ref(1)
   const pageSize = 10
-  const statusFilterValue = ref<MerchantStatus | undefined>('PENDING')
+  const statusFilterValue = ref<MerchantStatus | undefined>()
 
   const statusOptions = [
+    { label: 'All statuses', value: undefined },
     { label: 'Pending', value: 'PENDING' },
     { label: 'Active', value: 'ACTIVE' },
-    { label: 'All statuses', value: undefined },
   ]
 
   const statusFilter = computed({
