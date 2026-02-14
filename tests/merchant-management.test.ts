@@ -5,6 +5,7 @@ import type { AdminMerchantItem } from '../app/types'
 import {
   applyApproveSuccess,
   filterMerchants,
+  getMerchantDetailViewState,
   getMerchantListViewState,
   statusColor,
 } from '../app/utils/merchantManagement'
@@ -64,4 +65,23 @@ test('filter and approve helpers support success/failure UI flows', () => {
   assert.equal(statusColor('PENDING'), 'warning')
   assert.equal(statusColor('ACTIVE'), 'success')
   assert.equal(statusColor('SUSPENDED'), 'error')
+})
+
+test('merchant detail state resolves loading, error, empty_menu and ready', () => {
+  assert.equal(
+    getMerchantDetailViewState({ isLoading: true, errorMessage: '', menuCount: 0 }),
+    'loading'
+  )
+  assert.equal(
+    getMerchantDetailViewState({ isLoading: false, errorMessage: 'error', menuCount: 0 }),
+    'error'
+  )
+  assert.equal(
+    getMerchantDetailViewState({ isLoading: false, errorMessage: '', menuCount: 0 }),
+    'empty_menu'
+  )
+  assert.equal(
+    getMerchantDetailViewState({ isLoading: false, errorMessage: '', menuCount: 2 }),
+    'ready'
+  )
 })

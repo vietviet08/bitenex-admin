@@ -40,7 +40,12 @@
         <UTable :columns="columns" :data="filteredMerchants" :loading="isLoading">
           <template #merchant-cell="{ row }">
             <div class="space-y-0.5">
-              <p class="font-medium text-gray-900 dark:text-white">{{ row.original.name }}</p>
+              <NuxtLink
+                :to="`/admin/merchants/${row.original.id}`"
+                class="font-medium text-primary-600 hover:underline"
+              >
+                {{ row.original.name }}
+              </NuxtLink>
               <p class="text-xs text-gray-500">{{ row.original.slug }}</p>
             </div>
           </template>
@@ -65,16 +70,20 @@
           </template>
 
           <template #actions-cell="{ row }">
-            <UButton
-              v-if="row.original.status === 'PENDING'"
-              size="sm"
-              color="success"
-              :loading="approvingId === row.original.id"
-              @click="approve(row.original.id)"
-            >
-              Approve
-            </UButton>
-            <span v-else class="text-xs text-gray-500">No action</span>
+            <div class="flex items-center gap-2">
+              <UButton size="sm" variant="soft" :to="`/admin/merchants/${row.original.id}`">
+                Detail
+              </UButton>
+              <UButton
+                v-if="row.original.status === 'PENDING'"
+                size="sm"
+                color="success"
+                :loading="approvingId === row.original.id"
+                @click="approve(row.original.id)"
+              >
+                Approve
+              </UButton>
+            </div>
           </template>
         </UTable>
       </template>
