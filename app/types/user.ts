@@ -1,7 +1,31 @@
 import type { Role } from './auth'
 
 /**
- * User entity for user management
+ * API user response (snake_case from backend)
+ */
+export interface ApiAdminUserItem {
+  id: string
+  email: string
+  full_name: string
+  phone: string | null
+  role: Role
+  is_active: boolean
+  is_verified: boolean
+  avatar_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * API admin user list response
+ */
+export interface ApiAdminUserListResponse {
+  items: ApiAdminUserItem[]
+  total: number
+}
+
+/**
+ * User entity for user management (camelCase frontend)
  */
 export interface UserEntity {
   id: string
@@ -9,19 +33,11 @@ export interface UserEntity {
   fullName: string
   phone?: string
   role: Role
-  status: UserStatus
-  avatar?: string
+  isActive: boolean
+  isVerified: boolean
+  avatarUrl?: string
   createdAt: string
   updatedAt: string
-}
-
-/**
- * User status enum
- */
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
 }
 
 /**
@@ -29,30 +45,37 @@ export enum UserStatus {
  */
 export interface UserListParams {
   page?: number
-  limit?: number
+  per_page?: number
   search?: string
-  role?: Role
-  status?: UserStatus
+  role?: string
+  is_active?: boolean
 }
 
 /**
- * Create user request
+ * Admin update user request (snake_case for API)
  */
-export interface CreateUserRequest {
-  email: string
-  password: string
-  fullName: string
+export interface AdminUserUpdateRequest {
+  full_name?: string
   phone?: string
-  role: Role
+  role?: Role
+  is_active?: boolean
+  is_verified?: boolean
 }
 
 /**
- * Update user request
+ * Transform API user item to frontend entity
  */
-export interface UpdateUserRequest {
-  email?: string
-  fullName?: string
-  phone?: string
-  role?: Role
-  status?: UserStatus
+export function transformUserItem(item: ApiAdminUserItem): UserEntity {
+  return {
+    id: item.id,
+    email: item.email,
+    fullName: item.full_name,
+    phone: item.phone ?? undefined,
+    role: item.role,
+    isActive: item.is_active,
+    isVerified: item.is_verified,
+    avatarUrl: item.avatar_url ?? undefined,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }
 }
