@@ -83,7 +83,7 @@ export function usePermissions() {
       requiredRoles: [Role.ADMIN],
     },
     {
-      label: 'Merchant Management',
+      label: 'Merchants',
       icon: 'i-heroicons-building-storefront',
       to: '/admin/merchants',
       requiredRoles: [Role.ADMIN],
