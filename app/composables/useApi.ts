@@ -3,6 +3,8 @@ import type { ApiTokenResponse } from '~/types/auth'
 
 // RequestBody accepts any serializable object, not just Record<string, unknown>
 type RequestBody = { [key: string]: unknown } | FormData | Blob | ArrayBuffer | string | null
+type FetchOptions = Exclude<Parameters<typeof $fetch>[1], undefined>
+type RequestOptions = Omit<FetchOptions, 'method' | 'body' | 'params'>
 
 let isRefreshing = false
 let refreshPromise: Promise<boolean> | null = null
@@ -165,8 +167,13 @@ export function useApi() {
   /**
    * GET request
    */
-  async function get<T>(endpoint: string, params?: Record<string, unknown>): Promise<T> {
+  async function get<T>(
+    endpoint: string,
+    params?: Record<string, unknown>,
+    options: RequestOptions = {}
+  ): Promise<T> {
     return apiFetch<T>(endpoint, {
+      ...options,
       method: 'GET',
       params,
     })
@@ -175,8 +182,13 @@ export function useApi() {
   /**
    * POST request
    */
-  async function post<T>(endpoint: string, body?: RequestBody): Promise<T> {
+  async function post<T>(
+    endpoint: string,
+    body?: RequestBody,
+    options: RequestOptions = {}
+  ): Promise<T> {
     return apiFetch<T>(endpoint, {
+      ...options,
       method: 'POST',
       body: body as never,
     })
@@ -185,8 +197,13 @@ export function useApi() {
   /**
    * PUT request
    */
-  async function put<T>(endpoint: string, body?: RequestBody): Promise<T> {
+  async function put<T>(
+    endpoint: string,
+    body?: RequestBody,
+    options: RequestOptions = {}
+  ): Promise<T> {
     return apiFetch<T>(endpoint, {
+      ...options,
       method: 'PUT',
       body: body as never,
     })
@@ -195,8 +212,13 @@ export function useApi() {
   /**
    * PATCH request
    */
-  async function patch<T>(endpoint: string, body?: RequestBody): Promise<T> {
+  async function patch<T>(
+    endpoint: string,
+    body?: RequestBody,
+    options: RequestOptions = {}
+  ): Promise<T> {
     return apiFetch<T>(endpoint, {
+      ...options,
       method: 'PATCH',
       body: body as never,
     })
@@ -205,8 +227,9 @@ export function useApi() {
   /**
    * DELETE request
    */
-  async function del<T>(endpoint: string): Promise<T> {
+  async function del<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     return apiFetch<T>(endpoint, {
+      ...options,
       method: 'DELETE',
     })
   }
