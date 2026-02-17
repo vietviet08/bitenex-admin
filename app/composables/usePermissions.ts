@@ -4,7 +4,7 @@ import { Role } from '~/types/auth'
  * Feature permissions by role
  */
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
-  [Role.ADMIN]: ['dashboard', 'users', 'settings', 'orders', 'merchants', 'reports'],
+  [Role.ADMIN]: ['dashboard', 'users', 'settings', 'orders', 'payments', 'merchants', 'reports'],
   [Role.USER]: [],
   [Role.DRIVER]: [],
   [Role.MERCHANT]: [],
@@ -86,6 +86,18 @@ export function usePermissions() {
       label: 'Merchants',
       icon: 'i-heroicons-building-storefront',
       to: '/admin/merchants',
+      requiredRoles: [Role.ADMIN],
+    },
+    {
+      label: 'Orders',
+      icon: 'i-heroicons-shopping-bag',
+      to: '/admin/orders',
+      requiredRoles: [Role.ADMIN],
+    },
+    {
+      label: 'Payments',
+      icon: 'i-heroicons-credit-card',
+      to: '/admin/payments',
       requiredRoles: [Role.ADMIN],
     },
     {
