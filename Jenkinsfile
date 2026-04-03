@@ -91,7 +91,8 @@ pipeline {
                     if [ -f package-lock.json ]; then
                         if ! npm ci; then
                             echo "npm ci failed, falling back to npm install."
-                            rm -rf node_modules
+                            rm -rf node_modules package-lock.json
+                            npm cache clean --force
                             npm install
                         fi
                     else
