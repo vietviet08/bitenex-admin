@@ -88,7 +88,13 @@ pipeline {
                         exit 0
                     fi
 
-                    npm ci
+                    if [ -f package-lock.json ]; then
+                        npm ci
+                    else
+                        echo "package-lock.json not found. Falling back to npm install."
+                        npm install
+                    fi
+
                     NUXT_PUBLIC_API_BASE="${API_BASE_URL}" npm run generate
                     '''
             }
