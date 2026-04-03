@@ -89,7 +89,11 @@ pipeline {
                     fi
 
                     if [ -f package-lock.json ]; then
-                        npm ci
+                        if ! npm ci; then
+                            echo "npm ci failed, falling back to npm install."
+                            rm -rf node_modules
+                            npm install
+                        fi
                     else
                         echo "package-lock.json not found. Falling back to npm install."
                         npm install
