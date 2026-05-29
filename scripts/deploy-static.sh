@@ -10,7 +10,7 @@ Example:
   ./scripts/deploy-static.sh \
     --bucket bitenex-prod-admin-123456789012 \
     --distribution E123456789ABC \
-    --api-base https://api.catcosy.shop/api/v1
+    --api-base https://api.vietnq.online/api/v1
 EOF
 }
 

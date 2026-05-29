@@ -11,7 +11,7 @@ pipeline {
         string(name: 'AWS_REGION', defaultValue: 'ap-southeast-1', description: 'AWS region for S3 and CloudFront')
         string(name: 'S3_BUCKET', defaultValue: 'bitenex-prod-admin-640168447652', description: 'S3 bucket for static admin assets')
         string(name: 'CLOUDFRONT_DISTRIBUTION_ID', defaultValue: 'E3BIV8XFFLG4RF', description: 'CloudFront distribution id')
-        string(name: 'API_BASE_URL', defaultValue: 'https://api.catcosy.shop/api/v1', description: 'Public API base URL used by Nuxt runtime config')
+        string(name: 'API_BASE_URL', defaultValue: 'https://api.vietnq.online/api/v1', description: 'Public API base URL used by Nuxt runtime config')
         string(name: 'DEPLOY_BRANCHES', defaultValue: 'develop,main,master', description: 'Comma-separated branches allowed to deploy')
     }
 
@@ -19,7 +19,7 @@ pipeline {
         AWS_REGION = 'ap-southeast-1'
         S3_BUCKET = 'bitenex-prod-admin-640168447652'
         CLOUDFRONT_DISTRIBUTION_ID = 'E3BIV8XFFLG4RF'
-        API_BASE_URL = 'https://api.catcosy.shop/api/v1'
+        API_BASE_URL = 'https://api.vietnq.online/api/v1'
         DEPLOY_BRANCHES = 'develop,master'
     }
 
