@@ -60,9 +60,12 @@
             <div class="flex items-center gap-3">
               <UAvatar :alt="row.original.fullName" size="sm" />
               <div>
-                <p class="font-medium text-gray-900 dark:text-white">
+                <NuxtLink
+                  :to="`/admin/users/${row.original.id}`"
+                  class="font-medium text-primary-600 hover:underline"
+                >
                   {{ row.original.fullName }}
-                </p>
+                </NuxtLink>
                 <p class="text-sm text-gray-500">
                   {{ row.original.email }}
                 </p>
@@ -116,11 +119,7 @@
   import type { TableColumn } from '@nuxt/ui'
   import type { UserEntity, ApiAdminUserListResponse } from '~/types/user'
   import { transformUserItem } from '~/types/user'
-  import {
-    getUserListViewState,
-    activeStatusColor,
-    roleColor,
-  } from '~/utils/userManagement'
+  import { getUserListViewState, activeStatusColor, roleColor } from '~/utils/userManagement'
 
   // Page meta
   definePageMeta({
@@ -184,7 +183,8 @@
   })
 
   const statusFilter = computed({
-    get: () => statusOptions.find((opt) => opt.value === statusFilterValue.value) || statusOptions[0],
+    get: () =>
+      statusOptions.find((opt) => opt.value === statusFilterValue.value) || statusOptions[0],
     set: (value: { label: string; value: boolean | undefined }) => {
       statusFilterValue.value = value.value
       currentPage.value = 1
@@ -278,9 +278,7 @@
         {
           label: 'View Details',
           icon: 'i-heroicons-eye',
-          onSelect: () => {
-            toast.add({ title: 'View', description: `Viewing ${user.fullName}` })
-          },
+          onSelect: () => navigateTo(`/admin/users/${user.id}`),
         },
       ],
       [toggleItem],

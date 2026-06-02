@@ -203,7 +203,11 @@
             <div class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <p class="text-sm text-gray-500">Avg. Order</p>
               <p class="text-xl font-bold">
-                {{ formatCurrency(orderStats.week_count > 0 ? orderStats.week_revenue / orderStats.week_count : 0) }}
+                {{
+                  formatCurrency(
+                    orderStats.week_count > 0 ? orderStats.week_revenue / orderStats.week_count : 0
+                  )
+                }}
               </p>
             </div>
           </div>
@@ -214,78 +218,78 @@
 </template>
 
 <script setup lang="ts">
-import {
-  useDashboardStats,
-  useUserStats,
-  useOrderStats,
-  useMerchantStats,
-  useDriverStats,
-} from '~/composables/useDashboardQueries'
+  import {
+    useDashboardStats,
+    useUserStats,
+    useOrderStats,
+    useMerchantStats,
+    useDriverStats,
+  } from '~/composables/useDashboardQueries'
 
-definePageMeta({
-  layout: 'admin',
-  middleware: 'auth',
-})
+  definePageMeta({
+    layout: 'admin',
+    middleware: 'auth',
+  })
 
-// Fetch all stats
-const { data: dashboardStats, isLoading, refetch: refetchDashboard } = useDashboardStats()
-const { data: userStats, refetch: refetchUsers } = useUserStats()
-const { data: orderStats, refetch: refetchOrders } = useOrderStats()
-const { data: merchantStats, refetch: refetchMerchants } = useMerchantStats()
-const { data: driverStats, refetch: refetchDrivers } = useDriverStats()
+  // Fetch all stats
+  const { data: dashboardStats, isLoading, refetch: refetchDashboard } = useDashboardStats()
+  const { data: userStats, refetch: refetchUsers } = useUserStats()
+  const { data: orderStats, refetch: refetchOrders } = useOrderStats()
+  const { data: merchantStats, refetch: refetchMerchants } = useMerchantStats()
+  const { data: driverStats, refetch: refetchDrivers } = useDriverStats()
 
-// Refresh all data
-function refreshAll() {
-  refetchDashboard()
-  refetchUsers()
-  refetchOrders()
-  refetchMerchants()
-  refetchDrivers()
-}
-
-// Format helpers
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M'
+  // Refresh all data
+  function refreshAll() {
+    refetchDashboard()
+    refetchUsers()
+    refetchOrders()
+    refetchMerchants()
+    refetchDrivers()
   }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K'
+
+  // Format helpers
+  function formatNumber(num: number): string {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M'
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K'
+    }
+    return num.toLocaleString()
   }
-  return num.toLocaleString()
-}
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-function formatStatus(status: string): string {
-  return status
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/^\w/, (c) => c.toUpperCase())
-}
-
-function getPercentage(value: number, total: number): number {
-  if (total === 0) return 0
-  return Math.round((value / total) * 100)
-}
-
-function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    PENDING: 'warning',
-    CONFIRMED: 'info',
-    PREPARING: 'primary',
-    READY: 'success',
-    PICKING_UP: 'info',
-    DELIVERING: 'primary',
-    DELIVERED: 'success',
-    CANCELLED: 'error',
-    REFUNDED: 'gray',
+  function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      maximumFractionDigits: 0,
+    }).format(amount)
   }
-  return colors[status] || 'gray'
-}
+
+  function formatStatus(status: string): string {
+    return status
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .replace(/^\w/, (c) => c.toUpperCase())
+  }
+
+  function getPercentage(value: number, total: number): number {
+    if (total === 0) return 0
+    return Math.round((value / total) * 100)
+  }
+
+  function getStatusColor(status: string): string {
+    const colors: Record<string, string> = {
+      PENDING: 'warning',
+      CONFIRMED: 'info',
+      PREPARING: 'primary',
+      READY: 'success',
+      PICKING_UP: 'info',
+      DELIVERING: 'primary',
+      DELIVERED: 'success',
+      CANCELLED: 'error',
+      REFUNDED: 'gray',
+    }
+    return colors[status] || 'gray'
+  }
 </script>

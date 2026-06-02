@@ -4,7 +4,19 @@ import { Role } from '~/types/auth'
  * Feature permissions by role
  */
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
-  [Role.ADMIN]: ['dashboard', 'users', 'settings', 'orders', 'payments', 'merchants', 'reports', 'drivers', 'tickets', 'promotions', 'copilot'],
+  [Role.ADMIN]: [
+    'dashboard',
+    'users',
+    'settings',
+    'orders',
+    'payments',
+    'merchants',
+    'reports',
+    'drivers',
+    'tickets',
+    'promotions',
+    'copilot',
+  ],
   [Role.USER]: [],
   [Role.DRIVER]: [],
   [Role.MERCHANT]: [],

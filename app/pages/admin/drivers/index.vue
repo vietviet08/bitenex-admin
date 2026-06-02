@@ -55,9 +55,12 @@
             <div class="flex items-center gap-3">
               <UAvatar :alt="row.original.userName || 'Driver'" size="sm" />
               <div>
-                <p class="font-medium text-gray-900 dark:text-white">
+                <NuxtLink
+                  :to="`/admin/drivers/${row.original.id}`"
+                  class="font-medium text-primary-600 hover:underline"
+                >
                   {{ row.original.userName || 'Unknown' }}
-                </p>
+                </NuxtLink>
                 <p class="text-sm text-gray-500">
                   {{ row.original.userEmail || 'No email' }}
                 </p>
@@ -135,188 +138,184 @@
 </template>
 
 <script setup lang="ts">
-import { useDebounceFn } from '@vueuse/core'
-import type { TableColumn } from '@nuxt/ui'
-import type { DriverEntity, DriverStatus, ApiDriverItem } from '~/types/driver'
-import { transformDriverItem } from '~/types/driver'
+  import { useDebounceFn } from '@vueuse/core'
+  import type { TableColumn } from '@nuxt/ui'
+  import type { DriverEntity, DriverStatus, ApiDriverItem } from '~/types/driver'
+  import { transformDriverItem } from '~/types/driver'
 
-definePageMeta({
-  layout: 'admin',
-  middleware: 'auth',
-})
+  definePageMeta({
+    layout: 'admin',
+    middleware: 'auth',
+  })
 
-const api = useApi()
-const toast = useToast()
+  const api = useApi()
+  const toast = useToast()
 
-// State
-const drivers = ref<DriverEntity[]>([])
-const total = ref(0)
-const isLoading = ref(false)
-const loadError = ref('')
-const approvingId = ref<string | null>(null)
+  // State
+  const drivers = ref<DriverEntity[]>([])
+  const total = ref(0)
+  const isLoading = ref(false)
+  const loadError = ref('')
+  const approvingId = ref<string | null>(null)
 
-const search = ref('')
-const debouncedSearch = ref('')
-const currentPage = ref(1)
-const pageSize = 20
+  const search = ref('')
+  const debouncedSearch = ref('')
+  const currentPage = ref(1)
+  const pageSize = 20
 
-const statusFilterValue = ref<DriverStatus | undefined>(undefined)
-const approvalFilterValue = ref<boolean | undefined>(undefined)
+  const statusFilterValue = ref<DriverStatus | undefined>(undefined)
+  const approvalFilterValue = ref<boolean | undefined>(undefined)
 
-// Debounce
-const debouncedSetSearch = useDebounceFn((value: string) => {
-  debouncedSearch.value = value
-  currentPage.value = 1
-}, 300)
-
-watch(search, (value) => debouncedSetSearch(value))
-
-// Re-fetch when filters or page change
-watch([statusFilterValue, approvalFilterValue, currentPage], () => fetchDrivers())
-watch(debouncedSearch, () => {
-  currentPage.value = 1
-  fetchDrivers()
-})
-
-// Filter options
-const statusOptions = [
-  { label: 'All Status', value: undefined },
-  { label: 'Online', value: 'ONLINE' },
-  { label: 'Offline', value: 'OFFLINE' },
-  { label: 'Busy', value: 'BUSY' },
-  { label: 'Returning', value: 'RETURNING' },
-]
-
-const approvalOptions = [
-  { label: 'All', value: undefined },
-  { label: 'Approved', value: true },
-  { label: 'Pending', value: false },
-]
-
-const statusFilter = computed({
-  get: () => statusOptions.find((opt) => opt.value === statusFilterValue.value) || statusOptions[0],
-  set: (value: { label: string; value: DriverStatus | undefined }) => {
-    statusFilterValue.value = value.value
+  // Debounce
+  const debouncedSetSearch = useDebounceFn((value: string) => {
+    debouncedSearch.value = value
     currentPage.value = 1
-  },
-})
+  }, 300)
 
-const approvalFilter = computed({
-  get: () =>
-    approvalOptions.find((opt) => opt.value === approvalFilterValue.value) || approvalOptions[0],
-  set: (value: { label: string; value: boolean | undefined }) => {
-    approvalFilterValue.value = value.value
+  watch(search, (value) => debouncedSetSearch(value))
+
+  // Re-fetch when filters or page change
+  watch([statusFilterValue, approvalFilterValue, currentPage], () => fetchDrivers())
+  watch(debouncedSearch, () => {
     currentPage.value = 1
-  },
-})
+    fetchDrivers()
+  })
 
-// Table columns
-const columns: TableColumn<DriverEntity>[] = [
-  { accessorKey: 'userName', id: 'driver', header: 'Driver' },
-  { accessorKey: 'vehiclePlate', id: 'vehicle', header: 'Vehicle' },
-  { accessorKey: 'status', id: 'status', header: 'Status' },
-  { accessorKey: 'isApproved', id: 'approval', header: 'Approval' },
-  { accessorKey: 'averageRating', id: 'rating', header: 'Rating' },
-  { accessorKey: 'totalDeliveries', id: 'deliveries', header: 'Deliveries' },
-  { id: 'actions' },
-]
-
-// View state
-const listViewState = computed(() => {
-  if (isLoading.value) return 'loading'
-  if (loadError.value) return 'error'
-  if (drivers.value.length === 0) return 'empty'
-  return 'data'
-})
-
-// Fetch
-onMounted(() => fetchDrivers())
-
-async function fetchDrivers() {
-  isLoading.value = true
-  loadError.value = ''
-
-  try {
-    const params: Record<string, unknown> = {
-      page: currentPage.value,
-      per_page: pageSize,
-    }
-    if (debouncedSearch.value) params.search = debouncedSearch.value
-    if (statusFilterValue.value) params.status = statusFilterValue.value
-    if (approvalFilterValue.value !== undefined) params.is_approved = approvalFilterValue.value
-
-    const response = await api.get<ApiDriverItem[]>('/drivers/admin/list', params)
-    drivers.value = response.map(transformDriverItem)
-    total.value = response.length
-  } catch (error) {
-    const parsed = api.parseError(error)
-    loadError.value = parsed.message
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Actions
-async function approveDriver(driverId: string) {
-  approvingId.value = driverId
-  try {
-    await api.post(`/drivers/${driverId}/approve`)
-    api.showSuccessToast('Driver approved successfully')
-    await fetchDrivers()
-  } catch (error) {
-    const parsed = api.parseError(error)
-    toast.add({
-      title: 'Approval failed',
-      description: parsed.message,
-      color: 'error',
-    })
-  } finally {
-    approvingId.value = null
-  }
-}
-
-function getActionItems(driver: DriverEntity) {
-  return [
-    [
-      {
-        label: 'View Details',
-        icon: 'i-heroicons-eye',
-        onSelect: () => {
-          toast.add({
-            title: 'Driver Details',
-            description: `${driver.userName || 'Unknown'} - ${driver.vehiclePlate || 'N/A'}`,
-          })
-        },
-      },
-    ],
-    ...(driver.isApproved
-      ? []
-      : [
-          [
-            {
-              label: 'Approve',
-              icon: 'i-heroicons-check-circle',
-              color: 'success' as const,
-              onSelect: () => approveDriver(driver.id),
-            },
-          ],
-        ]),
+  // Filter options
+  const statusOptions = [
+    { label: 'All Status', value: undefined },
+    { label: 'Online', value: 'ONLINE' },
+    { label: 'Offline', value: 'OFFLINE' },
+    { label: 'Busy', value: 'BUSY' },
+    { label: 'Returning', value: 'RETURNING' },
   ]
-}
 
-// Helpers
-function statusColor(status: DriverStatus) {
-  switch (status) {
-    case 'ONLINE':
-      return 'success'
-    case 'OFFLINE':
-      return 'gray'
-    case 'BUSY':
-      return 'warning'
-    case 'RETURNING':
-      return 'info'
-    default:
-      return 'gray'
+  const approvalOptions = [
+    { label: 'All', value: undefined },
+    { label: 'Approved', value: true },
+    { label: 'Pending', value: false },
+  ]
+
+  const statusFilter = computed({
+    get: () =>
+      statusOptions.find((opt) => opt.value === statusFilterValue.value) || statusOptions[0],
+    set: (value: { label: string; value: DriverStatus | undefined }) => {
+      statusFilterValue.value = value.value
+      currentPage.value = 1
+    },
+  })
+
+  const approvalFilter = computed({
+    get: () =>
+      approvalOptions.find((opt) => opt.value === approvalFilterValue.value) || approvalOptions[0],
+    set: (value: { label: string; value: boolean | undefined }) => {
+      approvalFilterValue.value = value.value
+      currentPage.value = 1
+    },
+  })
+
+  // Table columns
+  const columns: TableColumn<DriverEntity>[] = [
+    { accessorKey: 'userName', id: 'driver', header: 'Driver' },
+    { accessorKey: 'vehiclePlate', id: 'vehicle', header: 'Vehicle' },
+    { accessorKey: 'status', id: 'status', header: 'Status' },
+    { accessorKey: 'isApproved', id: 'approval', header: 'Approval' },
+    { accessorKey: 'averageRating', id: 'rating', header: 'Rating' },
+    { accessorKey: 'totalDeliveries', id: 'deliveries', header: 'Deliveries' },
+    { id: 'actions' },
+  ]
+
+  // View state
+  const listViewState = computed(() => {
+    if (isLoading.value) return 'loading'
+    if (loadError.value) return 'error'
+    if (drivers.value.length === 0) return 'empty'
+    return 'data'
+  })
+
+  // Fetch
+  onMounted(() => fetchDrivers())
+
+  async function fetchDrivers() {
+    isLoading.value = true
+    loadError.value = ''
+
+    try {
+      const params: Record<string, unknown> = {
+        page: currentPage.value,
+        per_page: pageSize,
+      }
+      if (debouncedSearch.value) params.search = debouncedSearch.value
+      if (statusFilterValue.value) params.status = statusFilterValue.value
+      if (approvalFilterValue.value !== undefined) params.is_approved = approvalFilterValue.value
+
+      const response = await api.get<ApiDriverItem[]>('/drivers/admin/list', params)
+      drivers.value = response.map(transformDriverItem)
+      total.value = response.length
+    } catch (error) {
+      const parsed = api.parseError(error)
+      loadError.value = parsed.message
+    } finally {
+      isLoading.value = false
+    }
   }
-}
+
+  // Actions
+  async function approveDriver(driverId: string) {
+    approvingId.value = driverId
+    try {
+      await api.post(`/drivers/${driverId}/approve`)
+      api.showSuccessToast('Driver approved successfully')
+      await fetchDrivers()
+    } catch (error) {
+      const parsed = api.parseError(error)
+      toast.add({
+        title: 'Approval failed',
+        description: parsed.message,
+        color: 'error',
+      })
+    } finally {
+      approvingId.value = null
+    }
+  }
+
+  function getActionItems(driver: DriverEntity) {
+    return [
+      [
+        {
+          label: 'View Details',
+          icon: 'i-heroicons-eye',
+          onSelect: () => navigateTo(`/admin/drivers/${driver.id}`),
+        },
+      ],
+      ...(driver.isApproved
+        ? []
+        : [
+            [
+              {
+                label: 'Approve',
+                icon: 'i-heroicons-check-circle',
+                color: 'success' as const,
+                onSelect: () => approveDriver(driver.id),
+              },
+            ],
+          ]),
+    ]
+  }
+
+  // Helpers
+  function statusColor(status: DriverStatus) {
+    switch (status) {
+      case 'ONLINE':
+        return 'success'
+      case 'OFFLINE':
+        return 'gray'
+      case 'BUSY':
+        return 'warning'
+      case 'RETURNING':
+        return 'info'
+      default:
+        return 'gray'
+    }
+  }
 </script>

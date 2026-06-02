@@ -1,10 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import type {
-  DriverEntity,
-  DriverListParams,
-  ApiDriverItem,
-  DriverStatus,
-} from '~/types/driver'
+import type { DriverEntity, DriverListParams, ApiDriverItem, DriverStatus } from '~/types/driver'
 import { transformDriverItem } from '~/types/driver'
 
 /**

@@ -15,7 +15,9 @@
       </div>
 
       <div class="col-span-1">
-        <UCard class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 border-amber-200">
+        <UCard
+          class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-900 border-amber-200"
+        >
           <template #header>
             <h3 class="font-semibold flex items-center gap-2 text-amber-600 dark:text-amber-400">
               <UIcon name="i-heroicons-sparkles" />
@@ -35,20 +37,20 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  layout: 'admin',
-})
+  import type { TableColumn } from '@nuxt/ui'
 
-import type { TableColumn } from '@nuxt/ui'
+  definePageMeta({
+    layout: 'admin',
+  })
 
-const columns: TableColumn<any>[] = [
-  { accessorKey: 'name', header: 'Campaign' },
-  { accessorKey: 'discount', header: 'Discount' },
-  { accessorKey: 'status', header: 'Status' },
-]
+  const columns: TableColumn<any>[] = [
+    { accessorKey: 'name', header: 'Campaign' },
+    { accessorKey: 'discount', header: 'Discount' },
+    { accessorKey: 'status', header: 'Status' },
+  ]
 
-const campaigns = ref([
-  { name: 'Summer Fast Food', discount: '20% OFF', status: 'Active' },
-  { name: 'New User Onboarding', discount: '$5', status: 'Active' },
-])
+  const campaigns = ref([
+    { name: 'Summer Fast Food', discount: '20% OFF', status: 'Active' },
+    { name: 'New User Onboarding', discount: '$5', status: 'Active' },
+  ])
 </script>

@@ -11,8 +11,7 @@ export function filterUsers(items: UserEntity[], query: string): UserEntity[] {
   const normalized = query.toLowerCase()
   return items.filter(
     (u) =>
-      u.fullName.toLowerCase().includes(normalized) ||
-      u.email.toLowerCase().includes(normalized)
+      u.fullName.toLowerCase().includes(normalized) || u.email.toLowerCase().includes(normalized)
   )
 }
 
