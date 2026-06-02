@@ -4,7 +4,7 @@ import { Role } from '~/types/auth'
  * Feature permissions by role
  */
 const ROLE_PERMISSIONS: Record<Role, string[]> = {
-  [Role.ADMIN]: ['dashboard', 'users', 'settings', 'orders', 'payments', 'merchants', 'reports'],
+  [Role.ADMIN]: ['dashboard', 'users', 'settings', 'orders', 'payments', 'merchants', 'reports', 'drivers', 'tickets', 'promotions', 'copilot'],
   [Role.USER]: [],
   [Role.DRIVER]: [],
   [Role.MERCHANT]: [],
@@ -95,9 +95,33 @@ export function usePermissions() {
       requiredRoles: [Role.ADMIN],
     },
     {
+      label: 'Drivers',
+      icon: 'i-heroicons-truck',
+      to: '/admin/drivers',
+      requiredRoles: [Role.ADMIN],
+    },
+    {
       label: 'Payments',
       icon: 'i-heroicons-credit-card',
       to: '/admin/payments',
+      requiredRoles: [Role.ADMIN],
+    },
+    {
+      label: 'Tickets & AI Support',
+      icon: 'i-heroicons-ticket',
+      to: '/admin/tickets',
+      requiredRoles: [Role.ADMIN],
+    },
+    {
+      label: 'Promotions (AI)',
+      icon: 'i-heroicons-receipt-percent',
+      to: '/admin/promotions',
+      requiredRoles: [Role.ADMIN],
+    },
+    {
+      label: 'AI Copilot',
+      icon: 'i-heroicons-sparkles',
+      to: '/admin/copilot',
       requiredRoles: [Role.ADMIN],
     },
     {

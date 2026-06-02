@@ -379,7 +379,7 @@
 
     isRefunding.value = true
     try {
-      const refund = await api.post<RefundResponse>('/payments/refund', payload, {
+      const refund = await api.post<RefundResponse>('/payments/refund', payload as unknown as Record<string, unknown>, {
         headers: {
           'Idempotency-Key': buildIdempotencyKey(`admin-refund-${selectedRefundPayment.value.id}`),
         },
