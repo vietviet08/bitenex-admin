@@ -118,6 +118,80 @@
             </UFormField>
           </div>
         </UCard>
+
+        <!-- AI Provider Settings -->
+        <UCard class="lg:col-span-2">
+          <template #header>
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  AI Provider Settings
+                </h2>
+                <p class="text-sm text-gray-500">
+                  Configure the OpenAI-compatible provider used by search and review AI.
+                </p>
+              </div>
+              <UBadge
+                :color="aiSettings?.api_key_configured ? 'success' : 'warning'"
+                variant="subtle"
+              >
+                {{ aiSettings?.api_key_configured ? 'Configured' : 'Missing key' }}
+              </UBadge>
+            </div>
+          </template>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <UFormField label="API Key">
+              <UInput
+                v-model="aiApiKey"
+                type="password"
+                autocomplete="off"
+                :placeholder="aiSettings?.api_key_masked || 'Enter provider API key'"
+                :disabled="isSavingAi || isLoadingAi"
+              />
+              <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current key.</p>
+            </UFormField>
+
+            <UFormField label="Base URL">
+              <UInput
+                v-model="aiBaseUrl"
+                placeholder="https://api.openai.com/v1"
+                :disabled="isSavingAi || isLoadingAi"
+              />
+            </UFormField>
+
+            <UFormField label="Model">
+              <USelectMenu
+                v-model="selectedAiModel"
+                :items="aiModelOptions"
+                :disabled="isSavingAi || isLoadingAi || isLoadingModels"
+                placeholder="Load and select a model"
+              />
+            </UFormField>
+
+            <div class="flex items-end gap-3">
+              <UButton
+                type="button"
+                variant="soft"
+                icon="i-heroicons-arrow-path"
+                :loading="isLoadingModels"
+                :disabled="isSavingAi || isLoadingAi || !aiBaseUrl"
+                @click="loadAiModels"
+              >
+                Load Models
+              </UButton>
+              <UButton
+                type="button"
+                icon="i-heroicons-check"
+                :loading="isSavingAi"
+                :disabled="isLoadingAi || !aiBaseUrl || !selectedAiModel"
+                @click="saveAiSettings"
+              >
+                Save AI Settings
+              </UButton>
+            </div>
+          </div>
+        </UCard>
       </div>
 
       <!-- Submit Button -->
@@ -142,6 +216,22 @@
   })
 
   const toast = useToast()
+  const api = useApi()
+
+  interface AISettingsResponse {
+    api_key_configured: boolean
+    api_key_masked: string | null
+    base_url: string | null
+    chat_model: string | null
+  }
+
+  interface AIModelItem {
+    id: string
+  }
+
+  interface AIModelListResponse {
+    models: AIModelItem[]
+  }
 
   // Form schema with Zod
   const settingsSchema = toTypedSchema(
@@ -220,6 +310,98 @@
     set: (value: { label: string; value: string }) => {
       currencyValue.value = value.value
     },
+  })
+
+  const aiSettings = ref<AISettingsResponse | null>(null)
+  const aiApiKey = ref('')
+  const aiBaseUrl = ref('')
+  const aiModels = ref<AIModelItem[]>([])
+  const selectedAiModel = ref<{ label: string; value: string } | null>(null)
+  const isLoadingAi = ref(false)
+  const isLoadingModels = ref(false)
+  const isSavingAi = ref(false)
+
+  const aiModelOptions = computed(() =>
+    aiModels.value.map((model) => ({
+      label: model.id,
+      value: model.id,
+    }))
+  )
+
+  async function fetchAiSettings() {
+    isLoadingAi.value = true
+    try {
+      const settings = await api.get<AISettingsResponse>('/admin/ai-settings')
+      aiSettings.value = settings
+      aiBaseUrl.value = settings.base_url || ''
+      if (settings.chat_model) {
+        selectedAiModel.value = {
+          label: settings.chat_model,
+          value: settings.chat_model,
+        }
+        aiModels.value = [{ id: settings.chat_model }]
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load AI settings'
+      toast.add({ title: 'AI settings unavailable', description: message, color: 'error' })
+    } finally {
+      isLoadingAi.value = false
+    }
+  }
+
+  async function loadAiModels() {
+    isLoadingModels.value = true
+    try {
+      const response = await api.post<AIModelListResponse>('/admin/ai-settings/models', {
+        api_key: aiApiKey.value || undefined,
+        base_url: aiBaseUrl.value,
+      })
+      aiModels.value = response.models
+      if (
+        selectedAiModel.value &&
+        !response.models.some((model) => model.id === selectedAiModel.value?.value)
+      ) {
+        selectedAiModel.value = null
+      }
+      toast.add({
+        title: 'Models loaded',
+        description: `Loaded ${response.models.length} models from the provider.`,
+        color: 'success',
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load models'
+      toast.add({ title: 'Model loading failed', description: message, color: 'error' })
+    } finally {
+      isLoadingModels.value = false
+    }
+  }
+
+  async function saveAiSettings() {
+    if (!selectedAiModel.value) return
+    isSavingAi.value = true
+    try {
+      const settings = await api.put<AISettingsResponse>('/admin/ai-settings', {
+        api_key: aiApiKey.value || undefined,
+        base_url: aiBaseUrl.value,
+        chat_model: selectedAiModel.value.value,
+      })
+      aiSettings.value = settings
+      aiApiKey.value = ''
+      toast.add({
+        title: 'AI settings saved',
+        description: 'AI features will use the saved provider settings.',
+        color: 'success',
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to save AI settings'
+      toast.add({ title: 'AI settings save failed', description: message, color: 'error' })
+    } finally {
+      isSavingAi.value = false
+    }
+  }
+
+  onMounted(() => {
+    void fetchAiSettings()
   })
 
   const onSubmit = handleSubmit(async (values) => {
